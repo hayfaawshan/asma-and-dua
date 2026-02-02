@@ -1,5 +1,7 @@
 import { useState } from "react";
 import type { DivineNameResult } from "@/lib/types";
+import MoonLoader from "@/components/SparkleLoader";
+
 
 type Props = {
   currentResults: DivineNameResult[];
@@ -15,8 +17,16 @@ export default function Results({
   const [showPrevious, setShowPrevious] = useState(false);
 
   if (loading) {
-    return <p className="text-sm text-gray-600">Finding relevant Names...</p>;
+    return (
+      <div className="flex flex-col items-center space-y-3 py-6">
+        <MoonLoader />
+        <p className="text-sm text-gray-600 text-center">
+          Finding relevant Names...
+        </p>
+      </div>
+    );
   }
+  
 
   if (currentResults.length === 0) return null;
 
