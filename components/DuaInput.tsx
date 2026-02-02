@@ -40,22 +40,39 @@ export default function DuaInput({
         value={dua}
         onChange={(e) => setDua(e.target.value)}
         rows={6}
-        className="w-full rounded-lg border border-gray-300 p-3 focus:outline-none focus:ring-2 focus:ring-black"
+        className="w-full rounded-lg border border-gray-300 bg-black/20 p-3 focus:outline-none focus:ring-2 focus:ring-gray-400"
       />
 
       <div className="flex gap-3">
+        {/* Find button */}
         <button
           disabled={loading || dua.trim().length === 0}
           onClick={onSubmit}
-          className="flex-1 rounded-lg bg-black px-4 py-2 text-white hover:bg-gray-800 disabled:opacity-50"
+          className="
+            flex-1 rounded-lg
+            bg-gradient-to-r from-gray-800 to-gray-700
+            px-4 py-2 text-white
+            hover:from-gray-700 hover:to-gray-600
+            transition
+            shadow-md
+            disabled:opacity-50
+          "
         >
           {buttonLabel}
         </button>
 
+        {/* Clear button */}
         <button
           disabled={loading}
           onClick={onClear}
-          className="rounded-lg border border-gray-600 px-4 py-2 text-sm text-gray-300 hover:bg-gray-800 disabled:opacity-50"
+          className="
+            rounded-lg
+            border border-gray-500
+            px-4 py-2 text-sm text-gray-300
+            hover:bg-gray-800
+            transition
+            disabled:opacity-50
+          "
         >
           Clear
         </button>
