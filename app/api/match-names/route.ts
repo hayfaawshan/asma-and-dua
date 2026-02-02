@@ -9,6 +9,9 @@ const groq = new Groq({
   apiKey: process.env.GROQ_API_KEY
 });
 
+
+console.log("Has GROQ key:", !!process.env.GROQ_API_KEY);
+
 export async function POST(req: Request) {
   try {
     if (!process.env.GROQ_API_KEY) {
