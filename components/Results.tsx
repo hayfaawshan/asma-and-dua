@@ -1,7 +1,8 @@
+"use client";
+
 import { useState } from "react";
 import type { DivineNameResult } from "@/lib/types";
 import MoonLoader from "@/components/SparkleLoader";
-
 
 type Props = {
   currentResults: DivineNameResult[];
@@ -16,6 +17,10 @@ export default function Results({
 }: Props) {
   const [showPrevious, setShowPrevious] = useState(false);
 
+  // Defensive guards
+  const safeCurrent = Array.isArray(currentResults) ? currentResults : [];
+  const safePrevious = Array.isArray(previousResults) ? previousResults : [];
+
   if (loading) {
     return (
       <div className="flex flex-col items-center space-y-3 py-6">
@@ -26,15 +31,14 @@ export default function Results({
       </div>
     );
   }
-  
 
-  if (currentResults.length === 0) return null;
+  if (safeCurrent.length === 0) return null;
 
   return (
     <div className="w-full max-w-xl space-y-6">
 
       {/* Newest Results */}
-      {currentResults.map((item, index) => (
+      {safeCurrent.map((item, index) => (
         <div
           key={`current-${index}`}
           className="rounded-lg border border-gray-200 p-4"
@@ -47,7 +51,7 @@ export default function Results({
       ))}
 
       {/* Previous Results */}
-      {previousResults.length > 0 && (
+      {safePrevious.length > 0 && (
         <div className="space-y-2">
           <button
             onClick={() => setShowPrevious(v => !v)}
@@ -58,7 +62,7 @@ export default function Results({
 
           {showPrevious && (
             <div className="space-y-4">
-              {previousResults.map((item, index) => (
+              {safePrevious.map((item, index) => (
                 <div
                   key={`prev-${index}`}
                   className="rounded-lg border border-gray-800 p-4 opacity-80"
