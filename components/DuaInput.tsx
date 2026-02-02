@@ -32,7 +32,7 @@ export default function DuaInput({
   return (
     <div className="w-full max-w-xl space-y-4">
       <p className="text-sm text-gray-600">
-        Write your duʿāʾ in your own words. There is no right or wrong way.
+        Write your duʿāʾ in your own words.
       </p>
 
       <textarea
