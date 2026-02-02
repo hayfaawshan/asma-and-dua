@@ -7,7 +7,8 @@ export type DivineNameResult = {
   
   export type MatchNamesRequest = {
     dua: string;
-  };
+    exclude?: string[]
+    };
   
   export type MatchNamesResponse = DivineNameResult[];
   

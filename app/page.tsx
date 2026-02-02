@@ -1,47 +1,105 @@
 "use client";
-import { useState } from "react";
+
+import { useEffect, useState } from "react";
 
 import DuaInput from "@/components/DuaInput";
-import Results from "@/components/Results"
+import Results from "@/components/Results";
 
 import type { DivineNameResult } from "@/lib/types";
 
-
 export default function Home() {
-  const [results, setResults] = useState<DivineNameResult[]>([])
-  const [loading, setLoading] = useState(false)
-  const [clearSignal, setClearSigal] = useState(0)
+  const [dua, setDua] = useState(() => {
+    if (typeof window === "undefined") return "";
+    return localStorage.getItem("dua") ?? "";
+  });
 
+  const [currentResults, setCurrentResults] = useState<DivineNameResult[]>([]);
+  const [previousResults, setPreviousResults] = useState<DivineNameResult[]>([]);  
+  const [loading, setLoading] = useState(false);
+  const [clearSignal, setClearSignal] = useState(0);
+  const [lastSubmittedDua, setLastSubmittedDua] = useState("");
+
+  // Persist dua locally
+  useEffect(() => {
+    localStorage.setItem("dua", dua);
+  }, [dua]);
+
+  const isSameDua =
+    dua.trim() !== "" && dua.trim() === lastSubmittedDua.trim();
+
+    const buttonLabel =
+    currentResults.length > 0 && isSameDua
+      ? "Find more Names"
+      : "Find the Names";
   
+
   function handleClear() {
-    localStorage.removeItem("dua")
-    setResults([])
-    setClearSigal((v) => v + 1)
+    localStorage.removeItem("dua");
+    setDua("");
+    setCurrentResults([]);
+    setPreviousResults([]);
+    setLastSubmittedDua("");
+    setClearSignal((v) => v + 1);
   }
 
-  async function handleSubmit(dua: string) {
+  async function handleSubmit() {
+    const trimmed = dua.trim();
+    if (!trimmed) return;
+
+    const isSame = trimmed === lastSubmittedDua.trim();
+
+    const exclude = isSame
+  ? [...currentResults, ...previousResults].map(r => r.transliteration)
+  : [];
+
+
     setLoading(true);
-    setResults([])
 
     const res = await fetch("/api/match-names", {
       method: "POST",
-      headers: {"Content-Type": "application/json"},
-      body: JSON.stringify({dua})
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        dua: trimmed,
+        exclude
+      })
+    });
 
-    })
+    const data = await res.json();
 
-    const data = await res.json()
-    setResults(data)
-    setLoading(false)
+    if (isSame) {
+      setPreviousResults(prev => [...currentResults, ...prev]);
+      setCurrentResults(data);
+    } else {
+      setCurrentResults(data);
+      setPreviousResults([]);
+    }
+    
+    setLastSubmittedDua(trimmed);
+    setLoading(false);
   }
 
   return (
     <main className="min-h-screen flex flex-col items-center justify-center gap-10 p-6">
       <h1 className="text-3xl font-semibold">Asma & Duʿāʾ</h1>
 
-      <DuaInput onSubmit={handleSubmit} onClear={handleClear} loading={loading} clearSignal={clearSignal}/>
-      <Results results={results} loading={loading}/>
-    </main>
-  )
+      <DuaInput
+        dua={dua}
+        setDua={setDua}
+        onSubmit={handleSubmit}
+        onClear={handleClear}
+        loading={loading}
+        clearSignal={clearSignal}
+        buttonLabel={buttonLabel}
+      />
 
+      <div className="w-full max-w-xl h-px bg-gray-800" />
+
+      <Results
+        currentResults={currentResults}
+        previousResults={previousResults}
+        loading={loading}
+       />
+
+    </main>
+  );
 }

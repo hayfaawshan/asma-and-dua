@@ -5,18 +5,29 @@ import type { MatchNamesRequest, MatchNamesResponse } from "@/lib/types"
 export async function POST(req: Request) {
     try {
         const body = (await req.json() as MatchNamesRequest)
+        const dua = body.dua?.trim() ?? "";
+        const exclude = body.exclude ?? []
 
-        if (!body.dua || body.dua.trim().length === 0 ) {
+        if (!dua) {
             return NextResponse.json([], { status: 200})
         }
 
+        
+        const prompt = [
+            SYSTEM_PROMPT,
+            `User du'a:\n${dua}`,
+            exclude.length
+              ? `Previously suggested Names (do not repeat):\n${exclude.join(", ")}`
+              : ""
+          ].filter(Boolean).join("\n\n");
+          
         // call ollama model
-        const response = await fetch("http://localhost:11434/api/generate", {
+    const response = await fetch("http://localhost:11434/api/generate", {
             method: "POST",
             headers: { "Content-Type": "application/json"},
             body: JSON.stringify({
                 model: "llama3",
-                prompt: `${SYSTEM_PROMPT}\nUser du'a:\n${body.dua}`,
+                prompt,
                 stream: false
             })
         })
