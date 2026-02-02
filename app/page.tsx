@@ -6,9 +6,18 @@ import Results from "@/components/Results"
 
 import type { DivineNameResult } from "@/lib/types";
 
+
 export default function Home() {
   const [results, setResults] = useState<DivineNameResult[]>([])
   const [loading, setLoading] = useState(false)
+  const [clearSignal, setClearSigal] = useState(0)
+
+  
+  function handleClear() {
+    localStorage.removeItem("dua")
+    setResults([])
+    setClearSigal((v) => v + 1)
+  }
 
   async function handleSubmit(dua: string) {
     setLoading(true);
@@ -30,7 +39,7 @@ export default function Home() {
     <main className="min-h-screen flex flex-col items-center justify-center gap-10 p-6">
       <h1 className="text-3xl font-semibold">Asma & Duʿāʾ</h1>
 
-      <DuaInput onSubmit={handleSubmit}/>
+      <DuaInput onSubmit={handleSubmit} onClear={handleClear} loading={loading} clearSignal={clearSignal}/>
       <Results results={results} loading={loading}/>
     </main>
   )
