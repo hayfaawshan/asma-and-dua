@@ -50,6 +50,46 @@ const officialByArabic = new Map(
   ASMA_UL_HUSNA.map((name) => [normalizeArabic(name.arabic), name])
 );
 
+const KEYWORD_TO_NAMES: Array<{ keywords: string[]; names: string[] }> = [
+  {
+    keywords: ["forgive", "forgiveness", "sin", "repent", "repentance", "mercy"],
+    names: ["At-Tawwāb", "Al-‘Afuw", "Al-Ghafūr", "Al-Ghaffār", "Ar-Raḥīm"]
+  },
+  {
+    keywords: ["rizq", "provision", "provide", "sustain", "money", "job", "income"],
+    names: ["Ar-Razzāq", "Al-Wahhāb", "Al-Karīm", "Al-Muqīt"]
+  },
+  {
+    keywords: ["protect", "protection", "safe", "safety", "harm", "danger", "fear"],
+    names: ["Al-Ḥafīẓ", "Al-Muhaymin", "As-Salām", "Al-Mu’min"]
+  },
+  {
+    keywords: ["guidance", "guide", "knowledge", "understand", "wisdom"],
+    names: ["Al-Ḥakīm", "Al-‘Alīm", "Al-Khabīr"]
+  },
+  {
+    keywords: ["love", "marriage", "family", "heart"],
+    names: ["Al-Wadūd", "Ar-Raḥmān", "Ar-Raḥīm"]
+  },
+  {
+    keywords: ["healing", "heal", "sick", "illness", "health"],
+    names: ["As-Salām", "Al-Qawiyy", "Al-Matīn", "Ar-Raḥīm"]
+  },
+  {
+    keywords: ["justice", "oppression", "zulm", "fair"],
+    names: ["Al-‘Adl", "Al-Ḥakam", "Al-Ḥaqq"]
+  }
+];
+
+const DEFAULT_FALLBACK_NAMES = [
+  "Ar-Raḥmān",
+  "Ar-Raḥīm",
+  "Al-Wakīl",
+  "Al-Mujīb",
+  "Al-Laṭīf",
+  "Al-Karīm"
+];
+
 function resolveToOfficialName(candidate: Partial<DivineNameResult>) {
   if (!candidate) return null;
 
@@ -69,6 +109,40 @@ function resolveToOfficialName(candidate: Partial<DivineNameResult>) {
   }
 
   return null;
+}
+
+function fallbackFromDua(dua: string, excludedNormalized: Set<string>) {
+  const loweredDua = dua.toLowerCase();
+  const candidateNames: string[] = [];
+
+  for (const rule of KEYWORD_TO_NAMES) {
+    if (rule.keywords.some((keyword) => loweredDua.includes(keyword))) {
+      candidateNames.push(...rule.names);
+    }
+  }
+
+  candidateNames.push(...DEFAULT_FALLBACK_NAMES);
+
+  return candidateNames
+    .map((name) => officialByTransliteration.get(normalizeName(name)) ?? null)
+    .filter((item): item is (typeof ASMA_UL_HUSNA)[number] => Boolean(item))
+    .filter(
+      (item, index, all) =>
+        all.findIndex(
+          (entry) =>
+            normalizeName(entry.transliteration) ===
+            normalizeName(item.transliteration)
+        ) === index
+    )
+    .filter((item) => !excludedNormalized.has(normalizeName(item.transliteration)))
+    .slice(0, 2)
+    .map((item) => ({
+      arabic: item.arabic,
+      transliteration: item.transliteration,
+      meaning: item.meaning,
+      reason:
+        "This Name is from the official Asma ul-Husna list and fits your du'a theme."
+    }));
 }
 
 export async function POST(req: Request) {
@@ -146,7 +220,11 @@ export async function POST(req: Request) {
       )
       .slice(0, 2);
 
-    return NextResponse.json(sanitized);
+    if (sanitized.length > 0) {
+      return NextResponse.json(sanitized);
+    }
+
+    return NextResponse.json(fallbackFromDua(dua, excludedNormalized));
   } catch (error) {
     console.error("match-names error:", error);
     return NextResponse.json(
