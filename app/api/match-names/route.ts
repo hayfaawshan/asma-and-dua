@@ -161,7 +161,7 @@ function fallbackFromDua(dua: string, excludedNormalized: Set<string>) {
         ) === index
     )
     .filter((item) => !excludedNormalized.has(normalizeName(item.transliteration)))
-    .slice(0, 2)
+    .slice(0, 1)
     .map((item) => ({
       arabic: item.arabic,
       transliteration: item.transliteration,
@@ -243,7 +243,7 @@ export async function POST(req: Request) {
               normalizeName(item.transliteration)
           ) === index
       )
-      .slice(0, 2);
+      .slice(0, 1);
 
     if (sanitized.length > 0) {
       return NextResponse.json(sanitized);
