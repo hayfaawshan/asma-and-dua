@@ -14,24 +14,20 @@ export default function Home() {
   });
 
   const [currentResults, setCurrentResults] = useState<DivineNameResult[]>([]);
-  const [previousResults, setPreviousResults] = useState<DivineNameResult[]>([]);  
+  const [previousResults, setPreviousResults] = useState<DivineNameResult[]>([]);
   const [loading, setLoading] = useState(false);
   const [clearSignal, setClearSignal] = useState(0);
   const [lastSubmittedDua, setLastSubmittedDua] = useState("");
+  const [noMoreNames, setNoMoreNames] = useState(false);
 
-  // Persist dua locally
   useEffect(() => {
     localStorage.setItem("dua", dua);
   }, [dua]);
 
-  const isSameDua =
-    dua.trim() !== "" && dua.trim() === lastSubmittedDua.trim();
+  const isSameDua = dua.trim() !== "" && dua.trim() === lastSubmittedDua.trim();
 
-    const buttonLabel =
-    currentResults.length > 0 && isSameDua
-      ? "Find more Names"
-      : "Find the Names";
-  
+  const buttonLabel =
+    currentResults.length > 0 && isSameDua ? "Find more Names" : "Find the Names";
 
   function handleClear() {
     localStorage.removeItem("dua");
@@ -39,6 +35,7 @@ export default function Home() {
     setCurrentResults([]);
     setPreviousResults([]);
     setLastSubmittedDua("");
+    setNoMoreNames(false);
     setClearSignal((v) => v + 1);
   }
 
@@ -49,9 +46,8 @@ export default function Home() {
     const isSame = trimmed === lastSubmittedDua.trim();
 
     const exclude = isSame
-  ? [...currentResults, ...previousResults].map(r => r.transliteration)
-  : [];
-
+      ? [...currentResults, ...previousResults].map((r) => r.transliteration)
+      : [];
 
     setLoading(true);
 
@@ -67,13 +63,19 @@ export default function Home() {
     const data = await res.json();
 
     if (isSame) {
-      setPreviousResults(prev => [...currentResults, ...prev]);
-      setCurrentResults(data);
+      if (Array.isArray(data) && data.length > 0) {
+        setPreviousResults((prev) => [...currentResults, ...prev]);
+        setCurrentResults(data);
+        setNoMoreNames(false);
+      } else {
+        setNoMoreNames(true);
+      }
     } else {
-      setCurrentResults(data);
+      setCurrentResults(Array.isArray(data) ? data : []);
       setPreviousResults([]);
+      setNoMoreNames(false);
     }
-    
+
     setLastSubmittedDua(trimmed);
     setLoading(false);
   }
@@ -98,8 +100,8 @@ export default function Home() {
         currentResults={currentResults}
         previousResults={previousResults}
         loading={loading}
-       />
-
+        noMoreNames={noMoreNames}
+      />
     </main>
   );
 }

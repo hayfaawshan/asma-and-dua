@@ -8,16 +8,17 @@ type Props = {
   currentResults: DivineNameResult[];
   previousResults: DivineNameResult[];
   loading: boolean;
+  noMoreNames: boolean;
 };
 
 export default function Results({
   currentResults,
   previousResults,
-  loading
+  loading,
+  noMoreNames
 }: Props) {
   const [showPrevious, setShowPrevious] = useState(false);
 
-  // Defensive guards
   const safeCurrent = Array.isArray(currentResults) ? currentResults : [];
   const safePrevious = Array.isArray(previousResults) ? previousResults : [];
 
@@ -25,19 +26,15 @@ export default function Results({
     return (
       <div className="flex flex-col items-center space-y-3 py-6">
         <MoonLoader />
-        <p className="text-sm text-gray-600 text-center">
-          Finding relevant Names...
-        </p>
+        <p className="text-sm text-gray-600 text-center">Finding the best matching Name...</p>
       </div>
     );
   }
 
-  if (safeCurrent.length === 0) return null;
+  if (safeCurrent.length === 0 && !noMoreNames) return null;
 
   return (
     <div className="w-full max-w-xl space-y-6">
-
-      {/* Newest Results */}
       {safeCurrent.map((item, index) => (
         <div
           key={`current-${index}`}
@@ -50,11 +47,16 @@ export default function Results({
         </div>
       ))}
 
-      {/* Previous Results */}
+      {noMoreNames && (
+        <div className="rounded-lg border border-gray-700 p-4 text-sm text-gray-300">
+          No additional distinct Name was found for this same du&apos;a. Try adding more detail to your intention and search again.
+        </div>
+      )}
+
       {safePrevious.length > 0 && (
         <div className="space-y-2">
           <button
-            onClick={() => setShowPrevious(v => !v)}
+            onClick={() => setShowPrevious((v) => !v)}
             className="text-sm text-gray-400 underline"
           >
             {showPrevious ? "Hide previous Names" : "Show previous Names"}
@@ -78,9 +80,7 @@ export default function Results({
         </div>
       )}
 
-      <p className="text-sm text-gray-600">
-        Call upon Allah with these Names in your duʿāʾ.
-      </p>
+      <p className="text-sm text-gray-600">Call upon Allah with these Names in your duʿāʾ.</p>
     </div>
   );
 }
