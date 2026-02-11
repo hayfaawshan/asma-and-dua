@@ -2,8 +2,9 @@ export const runtime = "edge";
 
 import { NextResponse } from "next/server";
 import Groq from "groq-sdk";
+import { ASMA_UL_HUSNA } from "@/lib/asma-ul-husna";
 import { SYSTEM_PROMPT } from "@/lib/prompt";
-import type { MatchNamesRequest } from "@/lib/types";
+import type { DivineNameResult, MatchNamesRequest } from "@/lib/types";
 
 const groq = new Groq({
   apiKey: process.env.GROQ_API_KEY
@@ -11,6 +12,40 @@ const groq = new Groq({
 
 
 console.log("Has GROQ key:", !!process.env.GROQ_API_KEY);
+
+function normalizeName(value: string) {
+  return value
+    .normalize("NFKD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/^\s*ya\s+/i, "")
+    .replace(/[’'`]/g, "")
+    .replace(/[^\p{L}\p{N}]/gu, "")
+    .toLowerCase();
+}
+
+const officialByTransliteration = new Map(
+  ASMA_UL_HUSNA.map((name) => [normalizeName(name.transliteration), name])
+);
+
+const officialByArabic = new Map(ASMA_UL_HUSNA.map((name) => [name.arabic, name]));
+
+function resolveToOfficialName(candidate: Partial<DivineNameResult>) {
+  if (!candidate) return null;
+
+  if (candidate.transliteration) {
+    const byTransliteration = officialByTransliteration.get(
+      normalizeName(candidate.transliteration)
+    );
+    if (byTransliteration) return byTransliteration;
+  }
+
+  if (candidate.arabic) {
+    const byArabic = officialByArabic.get(candidate.arabic);
+    if (byArabic) return byArabic;
+  }
+
+  return null;
+}
 
 export async function POST(req: Request) {
   try {
@@ -37,11 +72,18 @@ export async function POST(req: Request) {
       .filter(Boolean)
       .join("\n\n");
 
+    const allowedNames = ASMA_UL_HUSNA.map(
+      (name) => `${name.transliteration} (${name.arabic})`
+    ).join(", ");
+
     const completion = await groq.chat.completions.create({
       model: "llama-3.1-8b-instant",
       messages: [
         { role: "system", content: SYSTEM_PROMPT },
-        { role: "user", content: prompt }
+        {
+          role: "user",
+          content: `${prompt}\n\nAllowed Names (must match exactly one from this list):\n${allowedNames}`
+        }
       ],
       temperature: 0.7
     });
@@ -61,7 +103,35 @@ export async function POST(req: Request) {
 
     const parsed = JSON.parse(match[0]);
 
-    return NextResponse.json(parsed);
+    const excludedNormalized = new Set(exclude.map(normalizeName));
+    const sanitized = (Array.isArray(parsed) ? parsed : [])
+      .map((item) => {
+        const official = resolveToOfficialName(item);
+        if (!official) return null;
+        if (excludedNormalized.has(normalizeName(official.transliteration))) return null;
+
+        return {
+          arabic: official.arabic,
+          transliteration: official.transliteration,
+          meaning: official.meaning,
+          reason:
+            typeof item.reason === "string" && item.reason.trim().length > 0
+              ? item.reason.trim()
+              : `This Name reflects your du'a intention.`
+        };
+      })
+      .filter((item): item is DivineNameResult => Boolean(item))
+      .filter(
+        (item, index, all) =>
+          all.findIndex(
+            (entry) =>
+              normalizeName(entry.transliteration) ===
+              normalizeName(item.transliteration)
+          ) === index
+      )
+      .slice(0, 2);
+
+    return NextResponse.json(sanitized);
   } catch (error) {
     console.error("match-names error:", error);
     return NextResponse.json(
