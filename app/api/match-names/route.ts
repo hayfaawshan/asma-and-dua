@@ -10,7 +10,6 @@ const groq = new Groq({
   apiKey: process.env.GROQ_API_KEY
 });
 
-
 console.log("Has GROQ key:", !!process.env.GROQ_API_KEY);
 
 function normalizeName(value: string) {
@@ -23,24 +22,49 @@ function normalizeName(value: string) {
     .toLowerCase();
 }
 
+function normalizeArabic(value: string) {
+  return value
+    .normalize("NFKD")
+    .replace(/[\u064B-\u065F\u0670]/g, "")
+    .replace(/[ٱأإآ]/g, "ا")
+    .replace(/ى/g, "ي")
+    .replace(/[^\u0621-\u064A]/g, "");
+}
+
+function stripArticlePrefix(value: string) {
+  return value.replace(/^(al|ar|as|ash|at|ad|az|an|am|aq)/, "");
+}
+
 const officialByTransliteration = new Map(
   ASMA_UL_HUSNA.map((name) => [normalizeName(name.transliteration), name])
 );
 
-const officialByArabic = new Map(ASMA_UL_HUSNA.map((name) => [name.arabic, name]));
+const officialByBaseTransliteration = new Map(
+  ASMA_UL_HUSNA.map((name) => [
+    stripArticlePrefix(normalizeName(name.transliteration)),
+    name
+  ])
+);
+
+const officialByArabic = new Map(
+  ASMA_UL_HUSNA.map((name) => [normalizeArabic(name.arabic), name])
+);
 
 function resolveToOfficialName(candidate: Partial<DivineNameResult>) {
   if (!candidate) return null;
 
   if (candidate.transliteration) {
-    const byTransliteration = officialByTransliteration.get(
-      normalizeName(candidate.transliteration)
-    );
-    if (byTransliteration) return byTransliteration;
+    const normalized = normalizeName(candidate.transliteration);
+
+    const exact = officialByTransliteration.get(normalized);
+    if (exact) return exact;
+
+    const byBase = officialByBaseTransliteration.get(stripArticlePrefix(normalized));
+    if (byBase) return byBase;
   }
 
   if (candidate.arabic) {
-    const byArabic = officialByArabic.get(candidate.arabic);
+    const byArabic = officialByArabic.get(normalizeArabic(candidate.arabic));
     if (byArabic) return byArabic;
   }
 
@@ -63,7 +87,6 @@ export async function POST(req: Request) {
     }
 
     const prompt = [
-      SYSTEM_PROMPT,
       `User du'a:\n${dua}`,
       exclude.length
         ? `Previously suggested Names (do not repeat):\n${exclude.join(", ")}`
@@ -72,20 +95,13 @@ export async function POST(req: Request) {
       .filter(Boolean)
       .join("\n\n");
 
-    const allowedNames = ASMA_UL_HUSNA.map(
-      (name) => `${name.transliteration} (${name.arabic})`
-    ).join(", ");
-
     const completion = await groq.chat.completions.create({
       model: "llama-3.1-8b-instant",
       messages: [
         { role: "system", content: SYSTEM_PROMPT },
-        {
-          role: "user",
-          content: `${prompt}\n\nAllowed Names (must match exactly one from this list):\n${allowedNames}`
-        }
+        { role: "user", content: prompt }
       ],
-      temperature: 0.7
+      temperature: 0.5
     });
 
     const rawText = completion.choices[0]?.message?.content;
@@ -94,7 +110,6 @@ export async function POST(req: Request) {
       throw new Error("No model output received");
     }
 
-    // Extract JSON array safely
     const match = rawText.match(/\[[\s\S]*\]/);
 
     if (!match) {
@@ -117,7 +132,7 @@ export async function POST(req: Request) {
           reason:
             typeof item.reason === "string" && item.reason.trim().length > 0
               ? item.reason.trim()
-              : `This Name reflects your du'a intention.`
+              : "This Name reflects your du'a intention."
         };
       })
       .filter((item): item is DivineNameResult => Boolean(item))
