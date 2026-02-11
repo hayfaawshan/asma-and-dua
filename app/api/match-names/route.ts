@@ -111,6 +111,32 @@ function resolveToOfficialName(candidate: Partial<DivineNameResult>) {
   return null;
 }
 
+
+function buildFallbackReason(
+  name: (typeof ASMA_UL_HUSNA)[number],
+  dua: string
+) {
+  const loweredDua = dua.toLowerCase();
+  const anchors = [
+    "forgive",
+    "forgiveness",
+    "mercy",
+    "guidance",
+    "protect",
+    "provision",
+    "healing",
+    "patience",
+    "family",
+    "heart"
+  ].filter((keyword) => loweredDua.includes(keyword));
+
+  if (anchors.length > 0) {
+    return `${name.transliteration} means "${name.meaning}", which connects to your du'a around ${anchors.slice(0, 2).join(" and ")}.`;
+  }
+
+  return `${name.transliteration} means "${name.meaning}", and it reflects a quality many du'as ask Allah through.`;
+}
+
 function fallbackFromDua(dua: string, excludedNormalized: Set<string>) {
   const loweredDua = dua.toLowerCase();
   const candidateNames: string[] = [];
@@ -140,8 +166,7 @@ function fallbackFromDua(dua: string, excludedNormalized: Set<string>) {
       arabic: item.arabic,
       transliteration: item.transliteration,
       meaning: item.meaning,
-      reason:
-        "This Name is from the official Asma ul-Husna list and fits your du'a theme."
+      reason: buildFallbackReason(item, dua)
     }));
 }
 
