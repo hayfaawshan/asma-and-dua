@@ -40,8 +40,7 @@ export default function Results({
           key={`current-${index}`}
           className="rounded-lg border border-gray-200 p-4"
         >
-          <p className="text-xs uppercase tracking-wide text-gray-500">Best match for your du&apos;a</p>
-          <h3 className="mt-1 text-xl font-semibold">{item.arabic}</h3>
+          <h3 className="text-xl font-semibold">{item.arabic}</h3>
           <p className="italic">{item.transliteration}</p>
           <p className="text-sm text-gray-600">{item.meaning}</p>
           <p className="mt-2 text-sm">{item.reason}</p>
@@ -81,7 +80,7 @@ export default function Results({
         </div>
       )}
 
-      <p className="text-sm text-gray-600">Call upon Allah with this Name in your duʿāʾ.</p>
+      <p className="text-sm text-gray-600">Call upon Allah with these Names in your duʿāʾ.</p>
     </div>
   );
 }

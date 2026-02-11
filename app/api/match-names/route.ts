@@ -117,24 +117,32 @@ function buildFallbackReason(
   dua: string
 ) {
   const loweredDua = dua.toLowerCase();
-  const anchors = [
-    "forgive",
-    "forgiveness",
-    "mercy",
-    "guidance",
-    "protect",
-    "provision",
-    "healing",
-    "patience",
-    "family",
-    "heart"
-  ].filter((keyword) => loweredDua.includes(keyword));
 
-  if (anchors.length > 0) {
-    return `${name.transliteration} means "${name.meaning}", which connects to your du'a around ${anchors.slice(0, 2).join(" and ")}.`;
+  if (["forgive", "forgiveness", "sin", "repent", "repentance"].some((k) => loweredDua.includes(k))) {
+    return `${name.transliteration} means "${name.meaning}", and this fits asking Allah for forgiveness and mercy.`;
   }
 
-  return `${name.transliteration} means "${name.meaning}", and it reflects a quality many du'as ask Allah through.`;
+  if (["rizq", "provision", "provide", "sustain", "money", "job", "income"].some((k) => loweredDua.includes(k))) {
+    return `${name.transliteration} means "${name.meaning}", and this fits asking Allah for provision and support.`;
+  }
+
+  if (["protect", "protection", "safe", "safety", "harm", "danger", "fear"].some((k) => loweredDua.includes(k))) {
+    return `${name.transliteration} means "${name.meaning}", and this fits asking Allah for protection and safety.`;
+  }
+
+  if (["guidance", "guide", "knowledge", "understand", "wisdom"].some((k) => loweredDua.includes(k))) {
+    return `${name.transliteration} means "${name.meaning}", and this fits asking Allah for guidance and clarity.`;
+  }
+
+  if (["healing", "heal", "sick", "illness", "health"].some((k) => loweredDua.includes(k))) {
+    return `${name.transliteration} means "${name.meaning}", and this fits asking Allah for healing and strength.`;
+  }
+
+  if (["love", "marriage", "family", "heart"].some((k) => loweredDua.includes(k))) {
+    return `${name.transliteration} means "${name.meaning}", and this fits asking Allah for love, mercy, and good relationships.`;
+  }
+
+  return `${name.transliteration} means "${name.meaning}", and this Name suits a sincere du'a asking Allah for help and goodness.`;
 }
 
 function fallbackFromDua(dua: string, excludedNormalized: Set<string>) {
@@ -161,7 +169,7 @@ function fallbackFromDua(dua: string, excludedNormalized: Set<string>) {
         ) === index
     )
     .filter((item) => !excludedNormalized.has(normalizeName(item.transliteration)))
-    .slice(0, 1)
+    .slice(0, 2)
     .map((item) => ({
       arabic: item.arabic,
       transliteration: item.transliteration,
@@ -243,7 +251,7 @@ export async function POST(req: Request) {
               normalizeName(item.transliteration)
           ) === index
       )
-      .slice(0, 1);
+      .slice(0, 2);
 
     if (sanitized.length > 0) {
       return NextResponse.json(sanitized);

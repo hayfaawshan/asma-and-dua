@@ -27,7 +27,7 @@ export default function Home() {
   const isSameDua = dua.trim() !== "" && dua.trim() === lastSubmittedDua.trim();
 
   const buttonLabel =
-    currentResults.length > 0 && isSameDua ? "Find another Name" : "Find the best Name";
+    currentResults.length > 0 && isSameDua ? "Find more Names" : "Find the Names";
 
   function handleClear() {
     localStorage.removeItem("dua");
