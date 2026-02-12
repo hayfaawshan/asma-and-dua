@@ -1,14 +1,9 @@
 export const runtime = "edge";
 
 import { NextResponse } from "next/server";
-import Groq from "groq-sdk";
 import { ASMA_UL_HUSNA } from "@/lib/asma-ul-husna";
 import { SYSTEM_PROMPT } from "@/lib/prompt";
 import type { DivineNameResult, MatchNamesRequest } from "@/lib/types";
-
-const groq = new Groq({
-  apiKey: process.env.GROQ_API_KEY
-});
 
 console.log("Has GROQ key:", !!process.env.GROQ_API_KEY);
 
@@ -180,7 +175,9 @@ function fallbackFromDua(dua: string, excludedNormalized: Set<string>) {
 
 export async function POST(req: Request) {
   try {
-    if (!process.env.GROQ_API_KEY) {
+    const apiKey = process.env.GROQ_API_KEY;
+
+    if (!apiKey) {
       throw new Error("Missing GROQ_API_KEY");
     }
 
@@ -202,16 +199,35 @@ export async function POST(req: Request) {
       .filter(Boolean)
       .join("\n\n");
 
-    const completion = await groq.chat.completions.create({
-      model: "llama-3.1-8b-instant",
-      messages: [
-        { role: "system", content: SYSTEM_PROMPT },
-        { role: "user", content: prompt }
-      ],
-      temperature: 0.5
-    });
+    const groqResponse = await fetch(
+      "https://api.groq.com/openai/v1/chat/completions",
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${apiKey}`
+        },
+        body: JSON.stringify({
+          model: "llama-3.1-8b-instant",
+          messages: [
+            { role: "system", content: SYSTEM_PROMPT },
+            { role: "user", content: prompt }
+          ],
+          temperature: 0.5
+        })
+      }
+    );
 
-    const rawText = completion.choices[0]?.message?.content;
+    if (!groqResponse.ok) {
+      const details = await groqResponse.text();
+      throw new Error(`Groq API request failed: ${groqResponse.status} ${details}`);
+    }
+
+    const completion = (await groqResponse.json()) as {
+      choices?: Array<{ message?: { content?: string } }>;
+    };
+
+    const rawText = completion.choices?.[0]?.message?.content;
 
     if (!rawText) {
       throw new Error("No model output received");
