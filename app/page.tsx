@@ -1,13 +1,18 @@
 "use client";
 
 import { useEffect, useState } from "react";
-
+import { MoonIcon, SunIcon } from "lucide-react";
 import DuaInput from "@/components/DuaInput";
 import Results from "@/components/Results";
 
 import type { DivineNameResult } from "@/lib/types";
 
 export default function Home() {
+  const [theme, setTheme] = useState<"dark" | "light">(() => {
+    if (typeof window === "undefined") return "dark";
+    return localStorage.getItem("theme") === "light" ? "light" : "dark";
+  });
+
   const [dua, setDua] = useState(() => {
     if (typeof window === "undefined") return "";
     return localStorage.getItem("dua") ?? "";
@@ -24,10 +29,25 @@ export default function Home() {
     localStorage.setItem("dua", dua);
   }, [dua]);
 
-  const isSameDua = dua.trim() !== "" && dua.trim() === lastSubmittedDua.trim();
+
+  useEffect(() => {
+    localStorage.setItem("theme", theme);
+
+    document.documentElement.classList.toggle(
+      "dark",
+      theme === "dark"
+    );
+
+    document.documentElement.style.colorScheme = theme;
+  }, [theme]);
+
+  const isSameDua =
+    dua.trim() !== "" && dua.trim() === lastSubmittedDua.trim();
 
   const buttonLabel =
-    currentResults.length > 0 && isSameDua ? "Find more Names" : "Find the Names";
+    currentResults.length > 0 && isSameDua
+      ? "Find more Names"
+      : "Find the Names";
 
   function handleClear() {
     localStorage.removeItem("dua");
@@ -46,7 +66,9 @@ export default function Home() {
     const isSame = trimmed === lastSubmittedDua.trim();
 
     const exclude = isSame
-      ? [...currentResults, ...previousResults].map((r) => r.transliteration)
+      ? [...currentResults, ...previousResults].map(
+          (r) => r.transliteration
+        )
       : [];
 
     setLoading(true);
@@ -56,8 +78,8 @@ export default function Home() {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         dua: trimmed,
-        exclude
-      })
+        exclude,
+      }),
     });
 
     const data = await res.json();
@@ -82,7 +104,23 @@ export default function Home() {
 
   return (
     <main className="min-h-screen flex flex-col items-center justify-center gap-10 p-6">
-      <h1 className="text-3xl font-semibold">Asma & Duʿāʾ</h1>
+      <div className="w-full max-w-xl flex items-center justify-between">
+        <h1 className="text-3xl font-semibold">Asma & Duʿāʾ</h1>
+
+        <button
+          onClick={() =>
+            setTheme((prev) => (prev === "dark" ? "light" : "dark"))
+          }
+          className="btn-base"
+          aria-label={
+            theme === "dark"
+              ? "Switch to light mode"
+              : "Switch to dark mode"
+          }
+        >
+          {theme === "dark" ? <SunIcon /> : <MoonIcon />}
+        </button>
+      </div>
 
       <DuaInput
         dua={dua}
@@ -94,7 +132,7 @@ export default function Home() {
         buttonLabel={buttonLabel}
       />
 
-      <div className="w-full max-w-xl h-px bg-gray-800" />
+      <div className="w-full max-w-xl h-px bg-border" />
 
       <Results
         currentResults={currentResults}
