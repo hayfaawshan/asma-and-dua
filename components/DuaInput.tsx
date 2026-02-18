@@ -31,7 +31,7 @@ export default function DuaInput({
 
   return (
     <div className="w-full max-w-xl space-y-4">
-      <p className="text-sm text-gray-600">
+      <p className="text-sm text-muted-foreground">
         Write your duʿāʾ in your own words.
       </p>
 
@@ -40,7 +40,7 @@ export default function DuaInput({
         value={dua}
         onChange={(e) => setDua(e.target.value)}
         rows={6}
-        className="w-full rounded-lg border border-gray-300 bg-black/20 p-3 focus:outline-none focus:ring-2 focus:ring-gray-400"
+        className="w-full rounded-lg border border-border bg-input text-foreground p-3 focus:outline-none focus:ring-2 focus:ring-slate-500"
       />
 
       <div className="flex gap-3">
@@ -48,15 +48,7 @@ export default function DuaInput({
         <button
           disabled={loading || dua.trim().length === 0}
           onClick={onSubmit}
-          className="
-            flex-1 rounded-lg
-            bg-gradient-to-r from-gray-800 to-gray-700
-            px-4 py-2 text-white
-            hover:from-gray-700 hover:to-gray-600
-            transition
-            shadow-md
-            disabled:opacity-50
-          "
+          className="flex-1 btn-primary"
         >
           {buttonLabel}
         </button>
@@ -65,20 +57,13 @@ export default function DuaInput({
         <button
           disabled={loading}
           onClick={onClear}
-          className="
-            rounded-lg
-            border border-gray-500
-            px-4 py-2 text-sm text-gray-300
-            hover:bg-gray-800
-            transition
-            disabled:opacity-50
-          "
+          className="btn-base px-4 py-2 text-sm"
         >
           Clear
         </button>
       </div>
 
-      <p className="text-xs text-gray-500">Your du&apos;a stays on your device, what you type won&apos;t be seen or saved.</p>
+      <p className="text-xs text-muted-foreground">Your du&apos;a stays on your device, what you type won&apos;t be seen or saved.</p>
     </div>
   );
 }

@@ -26,7 +26,7 @@ export default function Results({
     return (
       <div className="flex flex-col items-center space-y-3 py-6">
         <MoonLoader />
-        <p className="text-sm text-gray-600 text-center">Finding the best matching Name...</p>
+        <p className="text-sm text-muted-foreground text-center">Finding the best matching Name...</p>
       </div>
     );
   }
@@ -38,17 +38,17 @@ export default function Results({
       {safeCurrent.map((item, index) => (
         <div
           key={`current-${index}`}
-          className="rounded-lg border border-gray-200 p-4"
+          className="rounded-lg border border-border bg-card p-4"
         >
           <h3 className="text-xl font-semibold">{item.arabic}</h3>
           <p className="italic">{item.transliteration}</p>
-          <p className="text-sm text-gray-600">{item.meaning}</p>
+          <p className="text-sm text-muted-foreground">{item.meaning}</p>
           <p className="mt-2 text-sm">{item.reason}</p>
         </div>
       ))}
 
       {noMoreNames && (
-        <div className="rounded-lg border border-gray-700 p-4 text-sm text-gray-300">
+        <div className="rounded-lg border border-border bg-card-subtletext-sm text-muted-foreground">
           No additional distinct Name was found for this same du&apos;a. Try adding more detail to your intention and search again.
         </div>
       )}
@@ -57,7 +57,7 @@ export default function Results({
         <div className="space-y-2">
           <button
             onClick={() => setShowPrevious((v) => !v)}
-            className="text-sm text-gray-400 underline"
+            className="text-sm text-muted-foreground underline"
           >
             {showPrevious ? "Hide previous Names" : "Show previous Names"}
           </button>
@@ -67,11 +67,11 @@ export default function Results({
               {safePrevious.map((item, index) => (
                 <div
                   key={`prev-${index}`}
-                  className="rounded-lg border border-gray-800 p-4 opacity-80"
+                  className="rounded-lg border border-border bg-card-subtle p-4"
                 >
                   <h3 className="text-lg font-semibold">{item.arabic}</h3>
                   <p className="italic">{item.transliteration}</p>
-                  <p className="text-sm text-gray-600">{item.meaning}</p>
+                  <p className="text-sm text-muted-foreground">{item.meaning}</p>
                   <p className="mt-2 text-sm">{item.reason}</p>
                 </div>
               ))}
@@ -80,7 +80,7 @@ export default function Results({
         </div>
       )}
 
-      <p className="text-sm text-gray-600">Call upon Allah with these Names in your duʿāʾ.</p>
+      <p className="text-sm text-muted-foreground">Call upon Allah with these Names in your duʿāʾ.</p>
     </div>
   );
 }
