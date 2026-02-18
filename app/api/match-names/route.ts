@@ -5,7 +5,15 @@ import { ASMA_UL_HUSNA } from "@/lib/asma-ul-husna";
 import { SYSTEM_PROMPT } from "@/lib/prompt";
 import type { DivineNameResult, MatchNamesRequest } from "@/lib/types";
 
-console.log("Has GROQ key:", !!process.env.GROQ_API_KEY);
+function getGroqClient() {
+  const apiKey = process.env.GROQ_API_KEY;
+
+  if (!apiKey) {
+    throw new Error("Missing GROQ_API_KEY");
+  }
+
+  return new Groq({ apiKey });
+}
 
 function normalizeName(value: string) {
   return value
@@ -175,11 +183,7 @@ function fallbackFromDua(dua: string, excludedNormalized: Set<string>) {
 
 export async function POST(req: Request) {
   try {
-    const apiKey = process.env.GROQ_API_KEY;
-
-    if (!apiKey) {
-      throw new Error("Missing GROQ_API_KEY");
-    }
+    const groq = getGroqClient();
 
     const body = (await req.json()) as MatchNamesRequest;
 
