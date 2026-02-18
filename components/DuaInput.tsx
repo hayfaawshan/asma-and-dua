@@ -77,7 +77,7 @@ export default function DuaInput({
         </button>
       </div>
 
-      <p className="text-xs text-[var(--muted-foreground)]">This stays on your device.</p>
+      <p className="text-xs text-[var(--muted-foreground)]">Your du'a stays on your device, what you type won't be seen or saved.</p>
     </div>
   );
 }
